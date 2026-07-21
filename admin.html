@@ -1,0 +1,839 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Admin — Wanda Huang Portfolio</title>
+  <style>
+    *,*::before,*::after{box-sizing:border-box;margin:0;padding:0;}
+    :root{--black:#0a0a0a;--white:#f5f4f0;--gray:#888;--light:#e8e6e1;--accent:#2563eb;--danger:#dc2626;--success:#16a34a;}
+    body{background:#ececea;color:var(--black);font-family:'Helvetica Neue',Helvetica,Arial,sans-serif;font-size:14px;line-height:1.5;}
+    .layout{display:flex;min-height:100vh;}
+    .sidebar{width:220px;flex-shrink:0;background:var(--black);color:#fff;display:flex;flex-direction:column;position:sticky;top:0;height:100vh;overflow-y:auto;}
+    .sidebar-logo{padding:1.8rem 1.5rem 1.2rem;border-bottom:1px solid rgba(255,255,255,.1);}
+    .sidebar-logo h1{font-size:.72rem;font-weight:700;letter-spacing:.2em;text-transform:uppercase;}
+    .sidebar-logo p{font-size:.58rem;color:rgba(255,255,255,.38);letter-spacing:.1em;margin-top:.3rem;}
+    .sb-section{padding:.8rem 1.5rem .25rem;font-size:.55rem;letter-spacing:.25em;text-transform:uppercase;color:rgba(255,255,255,.3);}
+    .sb-btn{display:block;width:100%;padding:.65rem 1.5rem;font-size:.7rem;letter-spacing:.06em;color:rgba(255,255,255,.55);background:none;border:none;text-align:left;cursor:pointer;transition:background .15s,color .15s;}
+    .sb-btn:hover{background:rgba(255,255,255,.07);color:#fff;}
+    .sb-btn.active{background:rgba(255,255,255,.12);color:#fff;border-left:2px solid #fff;}
+    .sidebar-footer{padding:1.2rem 1.5rem;border-top:1px solid rgba(255,255,255,.1);margin-top:auto;}
+    .sidebar-footer p{font-size:.55rem;color:rgba(255,255,255,.28);letter-spacing:.12em;text-transform:uppercase;margin-bottom:.6rem;}
+    .sidebar-footer a{display:block;font-size:.62rem;color:rgba(255,255,255,.45);text-decoration:none;margin-bottom:.3rem;transition:color .2s;}
+    .sidebar-footer a:hover{color:#fff;}
+    .main{flex:1;overflow-y:auto;min-width:0;}
+    .topbar{background:var(--white);border-bottom:1px solid var(--light);padding:1.2rem 2rem;display:flex;justify-content:space-between;align-items:center;position:sticky;top:0;z-index:50;gap:1rem;}
+    .topbar h2{font-size:.85rem;font-weight:700;letter-spacing:.1em;text-transform:uppercase;}
+    .topbar-right{display:flex;align-items:center;gap:1rem;flex-shrink:0;}
+    .storage-wrap{display:flex;align-items:center;gap:.5rem;}
+    .storage-label{font-size:.58rem;letter-spacing:.1em;text-transform:uppercase;color:var(--gray);white-space:nowrap;}
+    .storage-bar{width:70px;height:6px;background:#ddd;border-radius:3px;overflow:hidden;}
+    .storage-fill{height:100%;background:var(--accent);border-radius:3px;transition:width .3s;}
+    .storage-fill.warn{background:#f59e0b;} .storage-fill.full{background:var(--danger);}
+    .btn{font-size:.62rem;font-weight:700;letter-spacing:.14em;text-transform:uppercase;padding:.5rem 1.1rem;border:none;cursor:pointer;transition:background .18s,transform .12s;white-space:nowrap;}
+    .btn:active{transform:scale(.97);}
+    .btn-primary{background:var(--accent);color:#fff;} .btn-primary:hover{background:#1d4ed8;}
+    .btn-danger{background:var(--danger);color:#fff;}
+    .btn-ghost{background:transparent;border:1.5px solid var(--black);color:var(--black);} .btn-ghost:hover{background:var(--black);color:#fff;}
+    .btn-sm{padding:.3rem .7rem;font-size:.58rem;}
+    .panel{display:none;padding:2rem;} .panel.active{display:block;}
+    .card{background:var(--white);border:1px solid var(--light);padding:1.8rem;margin-bottom:1.5rem;}
+    .card-head{font-size:.65rem;font-weight:700;letter-spacing:.2em;text-transform:uppercase;padding-bottom:.75rem;border-bottom:1px solid var(--light);margin-bottom:1.2rem;display:flex;justify-content:space-between;align-items:center;}
+    .row{margin-bottom:1.1rem;}
+    .row label{display:block;font-size:.58rem;letter-spacing:.18em;text-transform:uppercase;color:var(--gray);margin-bottom:.35rem;}
+    .row input[type=text],.row input[type=url],.row textarea{width:100%;padding:.55rem .75rem;border:1px solid #ddd;background:var(--white);font-family:inherit;font-size:.82rem;outline:none;transition:border-color .2s;resize:vertical;}
+    .row input:focus,.row textarea:focus{border-color:var(--accent);} .row textarea{min-height:90px;}
+    .grid2{display:grid;grid-template-columns:1fr 1fr;gap:1rem;}
+    .row-inline{display:flex;gap:.6rem;align-items:flex-end;} .row-inline input{flex:1;}
+    /* Entry list */
+    .entry-list{display:flex;flex-direction:column;gap:.8rem;}
+    .entry-row{background:var(--white);border:1px solid var(--light);border-left:3px solid var(--black);padding:1rem 1.2rem;display:grid;grid-template-columns:68px 1fr auto;gap:1rem;align-items:center;}
+    .e-thumb{width:68px;height:48px;object-fit:cover;background:var(--light);display:flex;align-items:center;justify-content:center;font-size:.55rem;letter-spacing:.1em;text-transform:uppercase;color:var(--gray);flex-shrink:0;}
+    .e-thumb img{width:100%;height:100%;object-fit:cover;display:block;}
+    .entry-row-title{font-size:.85rem;font-weight:700;text-transform:uppercase;letter-spacing:.05em;}
+    .entry-row-sub{font-size:.65rem;color:var(--gray);margin-top:.15rem;}
+    .entry-actions{display:flex;gap:.4rem;flex-shrink:0;}
+    /* Cover slot in modal */
+    .cover-slot{border:2px dashed var(--light);width:100%;aspect-ratio:16/7;display:flex;align-items:center;justify-content:center;cursor:pointer;position:relative;overflow:hidden;transition:border-color .2s;background:#fafaf8;}
+    .cover-slot:hover{border-color:var(--black);}
+    .cover-slot input{position:absolute;inset:0;opacity:0;cursor:pointer;width:100%;height:100%;}
+    .cover-slot img{width:100%;height:100%;object-fit:cover;display:none;}
+    .cover-slot-ph{text-align:center;color:var(--gray);pointer-events:none;}
+    .cover-slot-ph .icon{font-size:2rem;display:block;margin-bottom:.4rem;}
+    .cover-slot-ph p{font-size:.65rem;letter-spacing:.12em;text-transform:uppercase;}
+    .cover-slot-ph small{font-size:.58rem;color:#bbb;display:block;margin-top:.2rem;}
+    .cover-remove-btn{position:absolute;top:8px;right:8px;background:rgba(10,10,10,.75);color:#fff;border:none;cursor:pointer;padding:.3rem .7rem;font-size:.6rem;letter-spacing:.1em;text-transform:uppercase;opacity:0;transition:opacity .2s;}
+    .cover-slot:hover .cover-remove-btn{opacity:1;}
+    /* Gallery thumbs */
+    .thumb-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(100px,1fr));gap:8px;margin-bottom:.8rem;}
+    .thumb{position:relative;aspect-ratio:16/9;overflow:hidden;background:#ddd;}
+    .thumb img,.thumb video{width:100%;height:100%;object-fit:cover;display:block;}
+    .thumb-del{position:absolute;top:3px;right:3px;background:rgba(10,10,10,.78);color:#fff;border:none;cursor:pointer;width:20px;height:20px;font-size:11px;display:flex;align-items:center;justify-content:center;border-radius:50%;}
+    .media-zone{border:2px dashed var(--light);padding:1.2rem;text-align:center;cursor:pointer;position:relative;transition:border-color .2s;margin-bottom:1rem;}
+    .media-zone:hover{border-color:var(--black);}
+    .media-zone input{position:absolute;inset:0;opacity:0;cursor:pointer;width:100%;height:100%;}
+    .media-zone p{font-size:.65rem;letter-spacing:.12em;text-transform:uppercase;color:var(--gray);}
+    .media-zone small{font-size:.58rem;color:#bbb;display:block;margin-top:.2rem;}
+    /* Embeds */
+    .embed-list{display:flex;flex-direction:column;gap:.5rem;margin-bottom:.8rem;}
+    .embed-row{display:flex;justify-content:space-between;align-items:center;background:#f9f9f7;border:1px solid var(--light);padding:.5rem .8rem;gap:.5rem;}
+    .embed-row span{font-size:.7rem;color:var(--gray);word-break:break-all;flex:1;}
+    /* Modal */
+    .modal-bg{display:none;position:fixed;inset:0;background:rgba(0,0,0,.55);z-index:200;align-items:flex-start;justify-content:center;padding:1.5rem 1rem;overflow-y:auto;}
+    .modal-bg.open{display:flex;}
+    .modal{background:var(--white);width:640px;max-width:96vw;padding:2rem;margin:auto;}
+    .modal-title{font-size:.72rem;font-weight:700;letter-spacing:.18em;text-transform:uppercase;margin-bottom:1.5rem;padding-bottom:.75rem;border-bottom:1px solid var(--light);}
+    .modal-footer{margin-top:1.5rem;display:flex;justify-content:flex-end;gap:.6rem;padding-top:1rem;border-top:1px solid var(--light);}
+    /* About photo */
+    .photo-slot{border:2px dashed var(--light);aspect-ratio:3/4;max-width:160px;display:flex;align-items:center;justify-content:center;cursor:pointer;position:relative;overflow:hidden;}
+    .photo-slot img{width:100%;height:100%;object-fit:cover;display:none;}
+    .photo-slot-ph{text-align:center;color:var(--gray);font-size:.6rem;letter-spacing:.1em;text-transform:uppercase;padding:.8rem;}
+    /* Socials table */
+    .soc-table{width:100%;border-collapse:collapse;}
+    .soc-table th{font-size:.57rem;letter-spacing:.18em;text-transform:uppercase;color:var(--gray);padding:.4rem .7rem;border-bottom:1px solid var(--light);text-align:left;}
+    .soc-table td{padding:.55rem .7rem;border-bottom:1px solid var(--light);font-size:.8rem;vertical-align:middle;}
+    .soc-table tr:last-child td{border-bottom:none;}
+    /* Tags */
+    .tags-wrap{display:flex;flex-wrap:wrap;gap:.4rem;border:1px solid #ddd;padding:.4rem;min-height:38px;align-items:center;}
+    .tags-wrap input{border:none;outline:none;font-size:.8rem;min-width:100px;flex:1;background:transparent;}
+    .chip{background:var(--black);color:#fff;font-size:.58rem;letter-spacing:.1em;text-transform:uppercase;padding:.18rem .5rem;display:inline-flex;align-items:center;gap:.3rem;}
+    .chip button{background:none;border:none;color:inherit;cursor:pointer;font-size:.9rem;line-height:1;padding:0;}
+    /* Info box */
+    .info-box{background:#fffbeb;border:1px solid #fde68a;padding:1rem;font-size:.78rem;color:#92400e;line-height:1.7;margin-bottom:1.2rem;border-radius:2px;}
+    /* Toast */
+    .toast{position:fixed;bottom:1.8rem;right:1.8rem;z-index:300;background:var(--black);color:#fff;padding:.7rem 1.4rem;font-size:.65rem;letter-spacing:.12em;text-transform:uppercase;opacity:0;transform:translateY(6px);transition:opacity .25s,transform .25s;pointer-events:none;max-width:340px;}
+    .toast.show{opacity:1;transform:translateY(0);}
+    .toast.warn{background:#b45309;}
+    @media(max-width:700px){.layout{flex-direction:column;}.sidebar{width:100%;height:auto;position:relative;}.grid2{grid-template-columns:1fr;}.entry-row{grid-template-columns:50px 1fr auto;}}
+  </style>
+</head>
+<body>
+<div class="layout">
+
+<aside class="sidebar">
+  <div class="sidebar-logo">
+    <h1>Admin Panel</h1>
+    <p>Wanda Huang Portfolio</p>
+  </div>
+  <div class="sb-section">Pages</div>
+  <button class="sb-btn active" onclick="show('hero',this)">🏠 Hero</button>
+  <button class="sb-btn" onclick="show('about',this)">👤 About Me</button>
+  <button class="sb-btn" onclick="show('marketing',this)">📣 Marketing</button>
+  <button class="sb-btn" onclick="show('projects',this)">📋 Projects</button>
+  <div class="sb-section">Global</div>
+  <button class="sb-btn" onclick="show('socials',this)">🔗 Social Links</button>
+  <button class="sb-btn" onclick="show('data',this)">💾 Backup</button>
+  <div class="sidebar-footer">
+    <p>🔒 Private — keep on your computer only</p>
+    <a href="index.html" target="_blank">↗ View Home</a>
+    <a href="about.html" target="_blank">↗ View About</a>
+    <a href="marketing.html" target="_blank">↗ View Marketing</a>
+    <a href="projects.html" target="_blank">↗ View Projects</a>
+  </div>
+</aside>
+
+<div class="main">
+
+  <!-- DATA MISSING WARNING — shown if no saved data found on load -->
+  <div id="no-data-banner" style="display:none;background:#7f1d1d;color:#fff;padding:1rem 2rem;gap:1rem;align-items:center;flex-wrap:wrap;">
+    <span style="font-size:.78rem;flex:1;line-height:1.7;">⚠️ <strong>No saved data found.</strong> Your browser may have cleared it. Import your backup JSON file to restore your work — or start fresh.</span>
+    <label class="btn" style="background:#fff;color:#7f1d1d;font-size:.6rem;letter-spacing:.12em;cursor:pointer;">📂 Import Backup <input type="file" accept=".json" onchange="importData(this)" style="display:none"/></label>
+    <button class="btn" style="background:rgba(255,255,255,.15);color:#fff;font-size:.6rem;letter-spacing:.12em;" onclick="g('no-data-banner').style.display='none'">Start Fresh</button>
+  </div>
+
+  <div class="topbar">
+    <h2 id="panel-title">Hero</h2>
+    <div class="topbar-right">
+      <div class="storage-wrap" title="Browser storage used">
+        <span class="storage-label" id="storage-label">0%</span>
+        <div class="storage-bar"><div class="storage-fill" id="storage-fill" style="width:0%"></div></div>
+      </div>
+      <button class="btn btn-ghost btn-sm" onclick="exportData()" title="Download backup file">⬇ Backup</button>
+      <button class="btn btn-ghost btn-sm" onclick="generateStaticSite()" title="Export site for GitHub Pages" style="background:#16a34a;color:#fff;border-color:#16a34a;">🚀 Publish</button>
+      <button class="btn btn-primary" onclick="saveAll()">💾 Save All</button>
+    </div>
+  </div>
+
+  <!-- HERO -->
+  <div class="panel active" id="panel-hero">
+    <div class="card">
+      <div class="card-head">Hero Text</div>
+      <div class="row"><label>Your Name</label><input type="text" id="heroName" placeholder="Wanda Huang"/></div>
+      <div class="row"><label>Subtitle / Tagline</label><input type="text" id="heroSub" placeholder="Marketing · Project Management · Brand Strategy"/></div>
+    </div>
+  </div>
+
+  <!-- ABOUT -->
+  <div class="panel" id="panel-about">
+    <div class="card">
+      <div class="card-head">Profile Photo</div>
+      <div style="display:flex;gap:1.5rem;align-items:flex-start;">
+        <label class="photo-slot" for="about-photo-input" style="cursor:pointer;">
+          <input type="file" id="about-photo-input" accept="image/*" onchange="handleAboutPhoto(this)" style="display:none"/>
+          <img id="about-photo-preview"/>
+          <div class="photo-slot-ph" id="about-photo-ph"><div style="font-size:1.4rem;margin-bottom:.4rem">📷</div>Click to upload</div>
+        </label>
+        <div style="flex:1;">
+          <p style="font-size:.75rem;color:var(--gray);line-height:1.8;">Your profile photo for the About page.<br>Any size — will be compressed automatically.</p>
+          <button class="btn btn-ghost btn-sm" style="margin-top:.8rem" onclick="removeAboutPhoto()">Remove photo</button>
+        </div>
+      </div>
+    </div>
+    <div class="card">
+      <div class="card-head">About Content</div>
+      <div class="grid2">
+        <div class="row"><label>Name</label><input type="text" id="aboutName" placeholder="Wanda Huang"/></div>
+        <div class="row"><label>Role Line</label><input type="text" id="aboutRoleLine" placeholder="Marketing · Project Management"/></div>
+      </div>
+      <div class="row"><label>Bio (leave blank line between paragraphs)</label><textarea id="aboutBio" rows="7"></textarea></div>
+      <div class="row">
+        <label>Skill Tags (type + press Enter to add)</label>
+        <div class="tags-wrap" id="tags-wrap"><input type="text" id="tag-input" placeholder="Add tag, press Enter" onkeydown="addTag(event)"/></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- MARKETING -->
+  <div class="panel" id="panel-marketing">
+    <div class="card">
+      <div class="card-head">Marketing Entries <button class="btn btn-ghost btn-sm" onclick="openEntryModal('marketing',-1)">+ Add Entry</button></div>
+      <div class="entry-list" id="marketing-list"></div>
+    </div>
+  </div>
+
+  <!-- PROJECTS -->
+  <div class="panel" id="panel-projects">
+    <div class="card">
+      <div class="card-head">Project Entries <button class="btn btn-ghost btn-sm" onclick="openEntryModal('projects',-1)">+ Add Entry</button></div>
+      <div class="entry-list" id="projects-list"></div>
+    </div>
+  </div>
+
+  <!-- SOCIALS -->
+  <div class="panel" id="panel-socials">
+    <div class="card">
+      <div class="card-head">Social & Contact Links <button class="btn btn-ghost btn-sm" onclick="openSocialModal(-1)">+ Add Link</button></div>
+      <p style="font-size:.75rem;color:var(--gray);margin-bottom:1.2rem;">These appear on every portfolio page.</p>
+      <table class="soc-table">
+        <thead><tr><th>Label</th><th>URL</th><th>Icon</th><th></th></tr></thead>
+        <tbody id="soc-tbody"></tbody>
+      </table>
+    </div>
+  </div>
+
+  <!-- DATA -->
+  <div class="panel" id="panel-data">
+    <div class="card">
+      <div class="card-head">Backup & Restore</div>
+      <div class="info-box">⚠️ Photos are saved in your browser storage. Export a backup regularly so you don't lose your work!</div>
+      <div style="display:flex;gap:.8rem;flex-wrap:wrap;margin-bottom:1.5rem;">
+        <button class="btn btn-ghost" onclick="exportData()">⬇ Export JSON Backup</button>
+        <label class="btn btn-ghost" style="cursor:pointer">⬆ Import JSON <input type="file" accept=".json" onchange="importData(this)" style="display:none"/></label>
+        <button class="btn btn-danger btn-sm" onclick="clearData()">🗑 Clear All Data</button>
+      </div>
+      <div style="border-top:1px solid var(--light);padding-top:1.5rem;">
+        <p style="font-size:.78rem;font-weight:600;margin-bottom:.5rem;">📤 Publish to GitHub</p>
+        <p style="font-size:.75rem;color:var(--gray);line-height:1.7;margin-bottom:1rem;">Downloads a zip of your complete portfolio with all content and photos baked in. Unzip and upload those files to GitHub — no storage limits, no browser dependency.</p>
+        <button class="btn btn-primary" onclick="generateStaticSite()" style="background:#16a34a;border-color:#16a34a;">🚀 Generate &amp; Download Site</button>
+      </div>
+    </div>
+    <div class="card">
+      <div class="card-head">GitHub Pages — How to Publish</div>
+      <div style="font-size:.82rem;line-height:2;color:#333;">
+        <p><strong>1.</strong> Go to github.com → New repository → Public</p>
+        <p><strong>2.</strong> Upload: <code>index.html</code> <code>about.html</code> <code>marketing.html</code> <code>projects.html</code></p>
+        <p><strong>3.</strong> Keep <code>admin.html</code> on your computer only — never upload</p>
+        <p><strong>4.</strong> Settings → Pages → Source: main / root → Save</p>
+        <p><strong>5.</strong> Your portfolio will be live at: <code>https://yourusername.github.io/repo-name/</code></p>
+        <p style="color:var(--gray);font-size:.72rem;margin-top:.8rem;">Tip: For photos to show on GitHub Pages, use image URLs (e.g. upload photos to Imgur or your GitHub repo /images/ folder and paste the URL).</p>
+      </div>
+    </div>
+  </div>
+</div>
+</div>
+
+<!-- ENTRY MODAL -->
+<div class="modal-bg" id="entry-modal">
+  <div class="modal">
+    <div class="modal-title" id="entry-modal-title">Add Entry</div>
+    <input type="hidden" id="em-section"/>
+    <input type="hidden" id="em-index"/>
+
+    <!-- COVER PHOTO -->
+    <div class="row">
+      <label>Cover Photo — large image shown before the entry title on your portfolio</label>
+      <div class="cover-slot" id="em-cover-slot">
+        <input type="file" accept="image/*" id="em-cover-input" onchange="handleCoverPhoto(this)"/>
+        <img id="em-cover-img"/>
+        <div class="cover-slot-ph" id="em-cover-ph">
+          <span class="icon">🖼</span>
+          <p>Click to upload cover photo</p>
+          <small>Shown full-width before your entry heading</small>
+        </div>
+        <button class="cover-remove-btn" id="em-cover-remove" onclick="removeCover(event)">✕ Remove</button>
+      </div>
+    </div>
+
+    <div class="grid2">
+      <div class="row"><label>Number (e.g. 01)</label><input type="text" id="em-num"/></div>
+      <div class="row"><label>Title</label><input type="text" id="em-title"/></div>
+    </div>
+    <div class="row"><label>Role / Type</label><input type="text" id="em-role"/></div>
+    <div class="row"><label>Short Intro — 1-2 sentences shown on the listing page</label><input type="text" id="em-short-intro" placeholder="Brief teaser shown before the viewer clicks in…"/></div>
+    <div class="row"><label>Full Description — shown on the detail page</label><textarea id="em-body" rows="4"></textarea></div>
+    <div class="row"><label>Tags (comma-separated)</label><input type="text" id="em-tags" placeholder="Social Media, Canva, Events"/></div>
+
+    <!-- GALLERY -->
+    <div class="row">
+      <label>Gallery Photos & Videos</label>
+      <p style="font-size:.62rem;color:var(--gray);margin-bottom:.6rem;">Shown in a photo grid below your description. Images are auto-compressed to save storage space.</p>
+      <div class="thumb-grid" id="em-thumbs"></div>
+      <div class="media-zone">
+        <input type="file" accept="image/*,video/*" multiple onchange="handleGalleryMedia(this)"/>
+        <p>Click or drag — select multiple files at once</p>
+        <small>Images auto-compressed · Keep videos under 5MB each</small>
+      </div>
+    </div>
+
+    <!-- SOCIAL EMBEDS -->
+    <div class="row">
+      <label>Social Media Post Links</label>
+      <p style="font-size:.62rem;color:var(--gray);margin-bottom:.6rem;">Paste an Instagram, TikTok, YouTube, LinkedIn, or Facebook URL. It will show as an embedded post on your portfolio page.</p>
+      <div class="embed-list" id="em-embeds"></div>
+      <div style="display:grid;grid-template-columns:1fr 1fr auto;gap:.6rem;align-items:end;">
+        <div><label style="font-size:.55rem;letter-spacing:.16em;text-transform:uppercase;color:var(--gray);display:block;margin-bottom:.3rem;">URL</label>
+          <input type="url" id="em-embed-url" placeholder="https://www.instagram.com/p/…" style="width:100%;padding:.55rem .75rem;border:1px solid #ddd;font-family:inherit;font-size:.82rem;outline:none;"/></div>
+        <div><label style="font-size:.55rem;letter-spacing:.16em;text-transform:uppercase;color:var(--gray);display:block;margin-bottom:.3rem;">Label / Title (optional)</label>
+          <input type="text" id="em-embed-label" placeholder="e.g. Spring Event Post" style="width:100%;padding:.55rem .75rem;border:1px solid #ddd;font-family:inherit;font-size:.82rem;outline:none;"/></div>
+        <button class="btn btn-ghost btn-sm" onclick="addEntryEmbed()" style="margin-bottom:1px;">+ Add</button>
+      </div>
+    </div>
+
+    <div class="modal-footer">
+      <button class="btn btn-ghost" onclick="closeModal('entry-modal')">Cancel</button>
+      <button class="btn btn-primary" onclick="saveEntry()">Save Entry</button>
+    </div>
+  </div>
+</div>
+
+<!-- SOCIAL MODAL -->
+<div class="modal-bg" id="social-modal">
+  <div class="modal">
+    <div class="modal-title">Social / Contact Link</div>
+    <input type="hidden" id="sm-index"/>
+    <div class="row"><label>Label (e.g. Instagram)</label><input type="text" id="sm-label"/></div>
+    <div class="row"><label>URL</label><input type="url" id="sm-url" placeholder="https://instagram.com/yourhandle"/></div>
+    <div class="row"><label>Icon / Emoji (optional)</label><input type="text" id="sm-icon" placeholder="📷  or  in  or  ↗"/></div>
+    <div class="modal-footer">
+      <button class="btn btn-ghost" onclick="closeModal('social-modal')">Cancel</button>
+      <button class="btn btn-primary" onclick="saveSocial()">Save Link</button>
+    </div>
+  </div>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script>
+// ── HELPERS ──
+function g(id){return document.getElementById(id);}
+
+// ── DATA — localStorage + sessionStorage dual layer ──
+// Safari (and some privacy settings) can wipe localStorage between visits.
+// sessionStorage survives page reloads within the same tab session.
+// On load we restore localStorage from sessionStorage if needed.
+function getData(){
+  try{
+    const ls=localStorage.getItem('wanda_portfolio');
+    if(ls){
+      // Keep sessionStorage in sync so it's always fresh
+      try{sessionStorage.setItem('wanda_portfolio',ls);}catch(e){}
+      return JSON.parse(ls);
+    }
+    // localStorage empty — try sessionStorage fallback
+    const ss=sessionStorage.getItem('wanda_portfolio');
+    if(ss){
+      try{localStorage.setItem('wanda_portfolio',ss);}catch(e){}
+      return JSON.parse(ss);
+    }
+    return {};
+  }catch(e){return {};}
+}
+function setData(d){
+  const str=JSON.stringify(d);
+  // Always write to sessionStorage first (never fails due to quota in practice)
+  try{sessionStorage.setItem('wanda_portfolio',str);}catch(e){}
+  try{localStorage.setItem('wanda_portfolio',str);updateStorageBar();return true;}
+  catch(e){
+    showToast('⚠ Storage almost full — download a backup now!','warn',6000);
+    // Data is still saved in sessionStorage for this session
+    return true; // return true so the UI doesn't block saving
+  }
+}
+function merge(obj){return setData({...getData(),...obj});}
+
+// ── INDEXED DB — unlimited image storage ──
+function openImgDB(){
+  return new Promise(function(res,rej){
+    var r=indexedDB.open('wanda_imgs',1);
+    r.onupgradeneeded=function(e){e.target.result.createObjectStore('imgs');};
+    r.onsuccess=function(e){res(e.target.result);};
+    r.onerror=function(){rej(r.error);};
+  });
+}
+async function imgPut(dataUrl){
+  if(!dataUrl) return '';
+  var key='img_'+Date.now()+'_'+(Math.random()*1e9|0);
+  var db=await openImgDB();
+  await new Promise(function(res,rej){
+    var tx=db.transaction('imgs','readwrite');
+    tx.objectStore('imgs').put(dataUrl,key);
+    tx.oncomplete=res; tx.onerror=function(){rej(tx.error);};
+  });
+  return 'idb:'+key;
+}
+async function imgGet(ref){
+  if(!ref) return '';
+  if(!ref.startsWith('idb:')) return ref;
+  var db=await openImgDB();
+  return new Promise(function(res,rej){
+    var tx=db.transaction('imgs','readonly');
+    var r=tx.objectStore('imgs').get(ref.slice(4));
+    r.onsuccess=function(){res(r.result||'');};
+    r.onerror=function(){rej(r.error);};
+  });
+}
+async function resolveImgs(d){
+  var data=JSON.parse(JSON.stringify(d));
+  var rv=async function(s){return s&&s.startsWith('idb:')?await imgGet(s):(s||'');};
+  if(data.aboutPhoto) data.aboutPhoto=await rv(data.aboutPhoto);
+  for(var k of['marketingEntries','projectEntries']){
+    for(var e of(data[k]||[])){
+      e.coverImg=await rv(e.coverImg||'');
+      for(var m of(e.media||[])) m.src=await rv(m.src||'');
+    }
+  }
+  return data;
+}
+async function migrateToIDB(d){
+  var data=JSON.parse(JSON.stringify(d));
+  var mv=async function(s){
+    if(!s) return '';
+    if(s.startsWith('idb:')) return s;
+    if(s.startsWith('data:')) return await imgPut(s);
+    return s;
+  };
+  if(data.aboutPhoto) data.aboutPhoto=await mv(data.aboutPhoto);
+  for(var k of['marketingEntries','projectEntries']){
+    for(var e of(data[k]||[])){
+      e.coverImg=await mv(e.coverImg||'');
+      for(var m of(e.media||[])) m.src=await mv(m.src||'');
+    }
+  }
+  return data;
+}
+
+function updateStorageBar(){
+  try{
+    const raw=localStorage.getItem('wanda_portfolio')||'';
+    const used=new Blob([raw]).size;
+    const max=5*1024*1024;
+    const pct=Math.min(100,Math.round(used/max*100));
+    g('storage-label').textContent=pct+'%';
+    const f=g('storage-fill');f.style.width=pct+'%';
+    f.className='storage-fill'+(pct>85?' full':pct>60?' warn':'');
+  }catch(e){}
+}
+
+// ── IMAGE COMPRESSION ──
+function compressImage(file,maxW,quality){
+  return new Promise(function(resolve){
+    var reader=new FileReader();
+    reader.onload=function(ev){
+      var img=new Image();
+      img.onload=function(){
+        var scale=Math.min(1,maxW/img.width);
+        var w=Math.round(img.width*scale), h=Math.round(img.height*scale);
+        var c=document.createElement('canvas');c.width=w;c.height=h;
+        c.getContext('2d').drawImage(img,0,0,w,h);
+        var dataUrl=c.toDataURL('image/jpeg',quality);
+        // Store in IDB instead of localStorage — no size limit
+        imgPut(dataUrl).then(resolve).catch(function(){resolve(dataUrl);});
+      };
+      img.src=ev.target.result;
+    };
+    reader.readAsDataURL(file);
+  });
+}
+function readAsDataURL(file){
+  return new Promise(function(r){
+    var fr=new FileReader();
+    fr.onload=function(e){
+      // Videos also go to IDB
+      imgPut(e.target.result).then(r).catch(function(){r(e.target.result);});
+    };
+    fr.readAsDataURL(file);
+  });
+}
+
+// ── DEFAULTS ──
+const DM=[
+  {num:'01',title:'Alumni Relations Office',role:'Marketing & Events Intern',body:'Led content creation for Instagram and Facebook, driving alumni engagement through compelling event recaps and storytelling. Conducted alumni outreach and interviews. Supported planning and execution of alumni events.',tags:['Instagram','Facebook','Content Creation','Event Planning'],coverImg:'',media:[],embeds:[]},
+  {num:'02',title:'Boys & Girls Club of Whittier',role:'Community Outreach Program Lead',body:'Spearheaded social media strategies that boosted volunteer engagement by 25%. Produced 10 dynamic posts and 3 videos, driving a 15% increase in Instagram followers. Elevated brand visibility across five partner organizations.',tags:['+25% Engagement','+15% Followers','Video Production','LinkedIn'],coverImg:'',media:[],embeds:[]},
+  {num:'03',title:'Community Outreach Program',role:'Social Media Manager',body:'Managed social platforms and created engaging content to promote volunteer initiatives. Organized over 10 events and campaigns. Designed quarterly newsletters using Canva.',tags:['Social Media','Canva','Newsletter Design','Event Campaigns'],coverImg:'',media:[],embeds:[]},
+  {num:'04',title:'Astray Company',role:'Marketing Intern',body:'Led development of a corporate video at this startup focused on UN Sustainable Development Goals. Managed from concept to execution, aligning messaging with the sustainability mission.',tags:['Video Production','Brand Messaging','Sustainability','Startup'],coverImg:'',media:[],embeds:[]},
+];
+const DP=[
+  {num:'01',title:'AM Design',role:'Founder & Creative Director',body:'A lifestyle brand I founded to celebrate global creativity and support emerging artists. I oversee creative direction, artist partnerships, production, packaging, marketing, and donation coordination.',coverImg:'',media:[],embeds:[]},
+  {num:'02',title:'A Saving Company',role:'Project Manager',body:'A Taipei-based brand creating handcrafted silver jewelry and lifestyle items. Focused on sustainability and workshops. Managed full production and marketing pipeline.',coverImg:'',media:[],embeds:[]},
+  {num:'03',title:'Whittier College — CEC',role:'Social Media & Outreach Coordinator',body:'Managed social media and campus-wide volunteerism initiatives. Led the annual Love Whittier campaign and collaborated with community partners.',coverImg:'',media:[],embeds:[]},
+  {num:'04',title:'Meaning Taiwan',role:'Project Coordinator',body:'Customizable wedding and event gifts brand. Coordinated charitable donations for every order, integrating social impact into each celebration.',coverImg:'',media:[],embeds:[]},
+  {num:'05',title:'Meaning Wedding',role:'Production & Vendor Manager',body:'Personalized wedding gift brand. Designed every detail with brides — product, packaging, charitable donations. Led full production and vendor coordination.',coverImg:'',media:[],embeds:[]},
+];
+const DS=[{label:'Email',url:'mailto:wandahuang87@gmail.com',icon:'✉'},{label:'LinkedIn',url:'http://www.linkedin.com/in/wandah87',icon:'in'}];
+
+// ── PANEL ──
+function show(name,btn){
+  document.querySelectorAll('.panel').forEach(p=>p.classList.remove('active'));
+  document.querySelectorAll('.sb-btn').forEach(b=>b.classList.remove('active'));
+  g('panel-'+name).classList.add('active'); btn.classList.add('active');
+  g('panel-title').textContent={hero:'Hero',about:'About Me',marketing:'Marketing Entries',projects:'Project Entries',socials:'Social Links',data:'Backup & Export'}[name]||name;
+  if(name==='marketing') renderList('marketing');
+  if(name==='projects')  renderList('projects');
+  if(name==='socials')   renderSocials();
+}
+
+// ── FORM LOAD ──
+function loadForm(){
+  const d=getData();
+  // Show warning banner if no meaningful data found
+  const hasData=d.heroName||d.aboutName||d.marketingEntries||d.projectEntries;
+  g('no-data-banner').style.display=hasData?'none':'flex';
+  g('heroName').value=d.heroName||''; g('heroSub').value=d.heroSub||'';
+  g('aboutName').value=d.aboutName||''; g('aboutRoleLine').value=d.aboutRoleLine||'';
+  g('aboutBio').value=d.aboutBio||'';
+  if(d.aboutPhoto){
+    var ap=g('about-photo-preview');
+    ap.style.display='block'; g('about-photo-ph').style.display='none';
+    imgGet(d.aboutPhoto).then(function(src){if(src) ap.src=src;});
+  }
+  if(d.aboutTags) renderTags(d.aboutTags);
+  updateStorageBar();
+}
+
+// ── SAVE ALL ──
+function saveAll(){
+  const u={};
+  const hN=g('heroName').value.trim(); if(hN) u.heroName=hN;
+  const hS=g('heroSub').value.trim(); if(hS) u.heroSub=hS;
+  const aN=g('aboutName').value.trim(); if(aN) u.aboutName=aN;
+  const aR=g('aboutRoleLine').value.trim(); if(aR) u.aboutRoleLine=aR;
+  const aB=g('aboutBio').value.trim(); if(aB) u.aboutBio=aB;
+  if(merge(u)) showToast('Saved ✓');
+}
+
+// ── TOAST ──
+function showToast(msg,type,dur=2400){
+  const t=g('toast'); t.textContent=msg; t.className='toast'+(type?' '+type:'')+' show';
+  clearTimeout(t._to); t._to=setTimeout(()=>t.classList.remove('show'),dur);
+}
+
+// ── ABOUT PHOTO ──
+async function handleAboutPhoto(input){
+  const file=input.files[0]; if(!file) return;
+  showToast('Compressing…');
+  const ref=await compressImage(file,800,0.82); // returns idb: ref
+  const ap=g('about-photo-preview');
+  ap.style.display='block'; g('about-photo-ph').style.display='none';
+  imgGet(ref).then(function(src){if(src) ap.src=src;});
+  if(merge({aboutPhoto:ref})) showToast('Photo saved ✓');
+}
+function removeAboutPhoto(){
+  g('about-photo-preview').src=''; g('about-photo-preview').style.display='none';
+  g('about-photo-ph').style.display='block';
+  const d=getData(); delete d.aboutPhoto; setData(d); showToast('Photo removed');
+}
+
+// ── TAGS ──
+let _tags=[];
+function renderTags(tags){
+  _tags=tags||[]; const wrap=g('tags-wrap'); wrap.querySelectorAll('.chip').forEach(c=>c.remove());
+  const inp=g('tag-input');
+  _tags.forEach((t,i)=>{const c=document.createElement('span');c.className='chip';c.innerHTML=`${t}<button onclick="removeTag(${i})">&times;</button>`;wrap.insertBefore(c,inp);});
+}
+function addTag(e){if(e.key!=='Enter') return; const inp=g('tag-input'); const v=inp.value.trim(); if(!v) return; _tags.push(v);inp.value='';merge({aboutTags:_tags});renderTags(_tags);}
+function removeTag(i){_tags.splice(i,1);merge({aboutTags:_tags});renderTags(_tags);}
+
+// ── ENTRY LIST ──
+function getEntries(s){const d=getData();return s==='marketing'?(d.marketingEntries?JSON.parse(JSON.stringify(d.marketingEntries)):JSON.parse(JSON.stringify(DM))):(d.projectEntries?JSON.parse(JSON.stringify(d.projectEntries)):JSON.parse(JSON.stringify(DP)));}
+function saveEntries(s,items){const ok=merge(s==='marketing'?{marketingEntries:items}:{projectEntries:items}); if(!ok) showToast('⚠ Storage full — try removing images','warn',5000); return ok;}
+function renderList(s){
+  const items=getEntries(s);
+  g(s+'-list').innerHTML=items.length?items.map((e,i)=>`
+    <div class="entry-row">
+      <div class="e-thumb">${e.coverImg?`<img data-ref="${e.coverImg}" alt=""/>`:'No cover'}</div>
+      <div><div class="entry-row-title">${e.num} — ${e.title}</div><div class="entry-row-sub">${e.role} · ${(e.media||[]).length} photo/video · ${(e.embeds||[]).length} link(s)</div></div>
+      <div class="entry-actions">
+        <button class="btn btn-ghost btn-sm" onclick="openEntryModal('${s}',${i})">Edit</button>
+        <button class="btn btn-danger btn-sm" onclick="deleteEntry('${s}',${i})">Delete</button>
+      </div>
+    </div>`).join(''):'<p style="font-size:.78rem;color:var(--gray);padding:.5rem 0;">No entries — click Add Entry above.</p>';
+  // Async-fill cover thumbnails from IDB
+  g(s+'-list').querySelectorAll('img[data-ref]').forEach(function(img){
+    imgGet(img.getAttribute('data-ref')).then(function(src){if(src) img.src=src;});
+  });
+}
+function deleteEntry(s,i){if(!confirm('Delete this entry?')) return; const items=getEntries(s); items.splice(i,1); saveEntries(s,items); renderList(s); showToast('Deleted');}
+
+// ── ENTRY MODAL STATE ──
+let _cover='', _media=[], _embeds=[];
+
+function openEntryModal(s,i){
+  _cover=''; _media=[]; _embeds=[];
+  g('em-section').value=s; g('em-index').value=i;
+  g('entry-modal-title').textContent=i<0?'Add Entry':'Edit Entry';
+  if(i>=0){
+    const item=getEntries(s)[i];
+    g('em-num').value=item.num||''; g('em-title').value=item.title||'';
+    g('em-role').value=item.role||''; g('em-short-intro').value=item.shortIntro||'';
+    g('em-body').value=item.body||'';
+    g('em-tags').value=(item.tags||[]).join(', ');
+    _cover=item.coverImg||''; _media=JSON.parse(JSON.stringify(item.media||[])); _embeds=JSON.parse(JSON.stringify(item.embeds||[]));
+  } else {
+    ['em-num','em-title','em-role','em-short-intro','em-body','em-tags'].forEach(id=>g(id).value='');
+  }
+  g('em-embed-url').value=''; g('em-embed-label').value='';
+  syncCoverUI(); renderThumbs(); renderEmbeds();
+  g('entry-modal').classList.add('open');
+}
+
+// COVER
+async function handleCoverPhoto(input){
+  const file=input.files[0]; if(!file) return;
+  showToast('Compressing cover…');
+  _cover=await compressImage(file,1400,0.82);
+  syncCoverUI(); showToast('Cover photo ready ✓');
+}
+function syncCoverUI(){
+  var img=g('em-cover-img'), ph=g('em-cover-ph');
+  if(_cover){
+    img.style.display='block'; ph.style.display='none'; img.src='';
+    imgGet(_cover).then(function(src){if(src) img.src=src;});
+  } else {
+    img.style.display='none'; ph.style.display='block';
+  }
+}
+function removeCover(e){e.preventDefault();e.stopPropagation();_cover='';syncCoverUI();}
+
+// GALLERY
+async function handleGalleryMedia(input){
+  const files=Array.from(input.files); if(!files.length) return;
+  showToast('Processing '+files.length+' file(s)…');
+  for(const file of files){
+    if(file.type.startsWith('image/')){
+      const src=await compressImage(file,1200,0.78);
+      _media.push({type:'image',src,name:file.name});
+    } else {
+      if(file.size>6*1024*1024) showToast(`"${file.name}" is ${(file.size/1024/1024).toFixed(1)}MB — may be too large`,'warn',4000);
+      const src=await readAsDataURL(file);
+      _media.push({type:'video',src,name:file.name});
+    }
+  }
+  renderThumbs(); showToast(files.length+' file(s) added ✓'); input.value='';
+}
+function renderThumbs(){
+  g('em-thumbs').innerHTML=_media.map((m,i)=>`
+    <div class="thumb">
+      ${m.type==='video'?`<video data-ref="${m.src}" muted preload="metadata"></video>`:`<img data-ref="${m.src}" alt=""/>`}
+      <button class="thumb-del" onclick="removeMedia(${i})">✕</button>
+    </div>`).join('');
+  // Async-resolve IDB refs into actual src
+  g('em-thumbs').querySelectorAll('[data-ref]').forEach(function(el){
+    var ref=el.getAttribute('data-ref');
+    imgGet(ref).then(function(src){if(src) el.src=src;});
+  });
+}
+function removeMedia(i){_media.splice(i,1);renderThumbs();}
+
+// EMBEDS
+function addEntryEmbed(){
+  const url=g('em-embed-url').value.trim();
+  const label=g('em-embed-label').value.trim();
+  if(!url) return;
+  _embeds.push({url,label});
+  g('em-embed-url').value='';g('em-embed-label').value='';
+  renderEmbeds();
+}
+function removeEmbed(i){_embeds.splice(i,1);renderEmbeds();}
+function renderEmbeds(){
+  g('em-embeds').innerHTML=_embeds.length
+    ?_embeds.map((em,i)=>`<div class="embed-row">
+        <span><strong style="font-size:.72rem;">${em.label||'(no label)'}</strong><br><small style="font-size:.6rem;color:var(--gray);word-break:break-all;">${em.url}</small></span>
+        <button class="btn btn-danger btn-sm" onclick="removeEmbed(${i})">Remove</button>
+      </div>`).join('')
+    :'<p style="font-size:.68rem;color:var(--gray);">No links added yet.</p>';
+}
+
+// SAVE ENTRY
+function saveEntry(){
+  const s=g('em-section').value, idx=parseInt(g('em-index').value);
+  const entry={
+    num:g('em-num').value.trim()||'01', title:g('em-title').value.trim(),
+    role:g('em-role').value.trim(), shortIntro:g('em-short-intro').value.trim(),
+    body:g('em-body').value.trim(),
+    tags:g('em-tags').value.split(',').map(t=>t.trim()).filter(Boolean),
+    coverImg:_cover, media:_media, embeds:_embeds,
+  };
+  const items=getEntries(s);
+  if(idx<0) items.push(entry); else items[idx]=entry;
+  if(saveEntries(s,items)){
+    renderList(s);closeModal('entry-modal');
+    showToast('Entry saved ✓ — Download a backup from the ⬇ Backup button above!');
+    g('no-data-banner').style.display='none';
+  }
+}
+
+// ── SOCIAL LINKS ──
+function openSocialModal(i){
+  g('sm-index').value=i;
+  const soc=(getData().socials||DS);
+  if(i>=0){const s=soc[i];g('sm-label').value=s.label||'';g('sm-url').value=s.url||'';g('sm-icon').value=s.icon||'';}
+  else{['sm-label','sm-url','sm-icon'].forEach(id=>g(id).value='');}
+  g('social-modal').classList.add('open');
+}
+function saveSocial(){
+  const i=parseInt(g('sm-index').value);
+  const entry={label:g('sm-label').value.trim(),url:g('sm-url').value.trim(),icon:g('sm-icon').value.trim()||'↗'};
+  const d=getData(); const soc=d.socials?[...d.socials]:[...DS];
+  if(i<0) soc.push(entry); else soc[i]=entry;
+  merge({socials:soc}); renderSocials(); closeModal('social-modal'); showToast('Link saved ✓');
+}
+function deleteSocial(i){if(!confirm('Remove?')) return; const d=getData(); const soc=d.socials?[...d.socials]:[...DS]; soc.splice(i,1); merge({socials:soc}); renderSocials();}
+function renderSocials(){
+  const soc=(getData().socials||DS);
+  g('soc-tbody').innerHTML=soc.map((s,i)=>`
+    <tr><td>${s.icon||''} ${s.label}</td><td style="font-size:.7rem;color:var(--gray);word-break:break-all;max-width:200px">${s.url}</td><td>${s.icon||''}</td>
+    <td style="white-space:nowrap"><button class="btn btn-ghost btn-sm" onclick="openSocialModal(${i})">Edit</button> <button class="btn btn-danger btn-sm" onclick="deleteSocial(${i})">Del</button></td></tr>`).join('');
+}
+
+// ── MODALS ──
+function closeModal(id){g(id).classList.remove('open');}
+document.querySelectorAll('.modal-bg').forEach(bg=>bg.addEventListener('click',e=>{if(e.target===bg)bg.classList.remove('open');}));
+
+// ── EXPORT / IMPORT / CLEAR ──
+async function exportData(){
+  showToast('Preparing backup…','',2000);
+  const resolved=await resolveImgs(getData()); // swap IDB refs → real base64
+  const blob=new Blob([JSON.stringify(resolved,null,2)],{type:'application/json'});
+  const a=document.createElement('a');a.href=URL.createObjectURL(blob);a.download='wanda-portfolio-backup.json';a.click();
+  showToast('Backup downloaded ✓');
+}
+function importData(input){
+  const file=input.files[0];if(!file) return;
+  const r=new FileReader();
+  r.onload=async e=>{
+    try{
+      showToast('Importing — moving photos to local storage…','',4000);
+      const raw=JSON.parse(e.target.result);
+      const migrated=await migrateToIDB(raw); // inline base64 → IDB
+      setData(migrated);
+      loadForm();
+      showToast('Backup restored ✓');
+      g('no-data-banner').style.display='none';
+    }catch(err){alert('Invalid backup file — make sure you selected the right .json file.');}
+  };
+  r.readAsText(file);
+}
+function clearData(){if(!confirm('Clear ALL data? Cannot be undone.')) return;localStorage.removeItem('wanda_portfolio');loadForm();showToast('Data cleared');}
+
+// ── PUBLISH / STATIC SITE EXPORT ──
+function readLocalFile(name){
+  return new Promise(function(res,rej){
+    var x=new XMLHttpRequest();
+    x.open('GET',name,true);
+    x.onload=function(){
+      if(x.status===0||x.status===200) res(x.responseText);
+      else rej(new Error('Status '+x.status+' reading '+name));
+    };
+    x.onerror=function(){rej(new Error('Cannot read '+name));};
+    x.send();
+  });
+}
+
+async function generateStaticSite(){
+  // Load JSZip on demand
+  if(typeof JSZip==='undefined'){
+    showToast('Loading publish tool…','',2000);
+    await new Promise(function(res,rej){
+      var s=document.createElement('script');
+      s.src='https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js';
+      s.onload=res;
+      s.onerror=rej;
+      document.head.appendChild(s);
+    }).catch(function(){
+      showToast('⚠ Need internet connection to use Publish.','warn',5000);
+    });
+    if(typeof JSZip==='undefined') return;
+  }
+
+  var raw=getData();
+  if(!raw||Object.keys(raw).length===0){
+    showToast('No data found — import your backup first.','warn',4000);
+    return;
+  }
+
+  showToast('Resolving photos — this may take a moment…','',5000);
+  var d=await resolveImgs(raw); // swap IDB refs → real base64 for static files
+  showToast('Building site files…','',3000);
+
+  // Read all 4 portfolio pages
+  var pages;
+  try{
+    pages=await Promise.all([
+      readLocalFile('index.html'),
+      readLocalFile('about.html'),
+      readLocalFile('marketing.html'),
+      readLocalFile('entry.html'),
+    ]);
+  }catch(err){
+    showToast('⚠ Could not read page files. Make sure admin.html and all portfolio files are in the same folder.','warn',7000);
+    console.error(err);
+    return;
+  }
+
+  var indexSrc=pages[0], aboutSrc=pages[1], marketingSrc=pages[2], entrySrc=pages[3];
+
+  // Data tag injected before </head> — replaces localStorage with baked-in object
+  var dataTag='<script>window._PD='+JSON.stringify(d)+';<\/script>';
+  var getterFn='function getData(){return window._PD||{};}';
+
+  function bake(src){
+    // Inject data payload
+    var out=src.replace('</head>',dataTag+'\n</head>');
+    // Replace getData() (single-line version used in all display pages)
+    out=out.replace(/function getData\(\)\{[^\n]+/,getterFn);
+    return out;
+  }
+
+  var redirectPage='<!DOCTYPE html><html><head><meta charset="UTF-8"/><meta http-equiv="refresh" content="0;url=marketing.html"/><title>Redirecting…</title></head><body><script>location.replace("marketing.html");<\/script></body></html>';
+
+  var zip=new JSZip();
+  zip.file('index.html',  bake(indexSrc));
+  zip.file('about.html',  bake(aboutSrc));
+  zip.file('marketing.html', bake(marketingSrc));
+  zip.file('entry.html',  bake(entrySrc));
+  zip.file('projects.html', redirectPage);
+
+  var blob=await zip.generateAsync({type:'blob',compression:'DEFLATE',compressionOptions:{level:6}});
+  var url=URL.createObjectURL(blob);
+  var a=document.createElement('a');
+  a.href=url; a.download='portfolio-github.zip';
+  document.body.appendChild(a); a.click(); document.body.removeChild(a);
+  setTimeout(function(){URL.revokeObjectURL(url);},5000);
+
+  showToast('✓ Downloaded! Unzip and upload all 5 files to GitHub.','',6000);
+}
+
+loadForm();
+</script>
+</body>
+</html>

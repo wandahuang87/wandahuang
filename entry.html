@@ -1,0 +1,345 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Entry — Wanda Huang</title>
+  <style>
+    *,*::before,*::after{box-sizing:border-box;margin:0;padding:0;}
+    :root{--black:#0a0a0a;--white:#f5f4f0;--gray:#888;--light:#e8e6e1;}
+    body{background:var(--white);color:var(--black);font-family:'Helvetica Neue',Helvetica,Arial,sans-serif;font-weight:300;line-height:1.6;}
+
+    nav{position:sticky;top:0;z-index:100;display:flex;justify-content:space-between;align-items:center;padding:1.5rem 3rem;background:var(--white);border-bottom:1px solid var(--light);}
+    .nav-logo{font-size:.72rem;font-weight:700;letter-spacing:.22em;text-transform:uppercase;color:var(--black);text-decoration:none;}
+    .nav-links{display:flex;gap:2.5rem;list-style:none;}
+    .nav-links a{font-size:.68rem;font-weight:500;letter-spacing:.18em;text-transform:uppercase;color:var(--black);text-decoration:none;opacity:.55;transition:opacity .2s;}
+    .nav-links a:hover{opacity:1;}
+
+    /* BACK CRUMB */
+    .breadcrumb{padding:1.5rem 3rem;border-bottom:1px solid var(--light);display:flex;align-items:center;gap:.8rem;}
+    .back-link{font-size:.62rem;letter-spacing:.2em;text-transform:uppercase;color:var(--gray);text-decoration:none;display:inline-flex;align-items:center;gap:.4rem;transition:color .2s;}
+    .back-link:hover{color:var(--black);}
+    .breadcrumb-sep{font-size:.6rem;color:var(--light);}
+    .breadcrumb-current{font-size:.62rem;letter-spacing:.15em;text-transform:uppercase;color:var(--black);}
+
+    /* HERO COVER */
+    .entry-hero{width:100%;max-height:70vh;overflow:hidden;background:#111;position:relative;}
+    .entry-hero img{width:100%;height:100%;object-fit:cover;display:block;}
+    .entry-hero.no-cover{display:none;}
+
+    /* DETAIL CONTENT */
+    .entry-detail{padding:4rem 3rem 3rem;border-bottom:1px solid var(--light);max-width:900px;}
+    .entry-meta{display:flex;align-items:baseline;gap:2rem;margin-bottom:1.8rem;}
+    .entry-num{font-size:.62rem;letter-spacing:.28em;text-transform:uppercase;color:var(--gray);}
+    .entry-section-tag{font-size:.58rem;letter-spacing:.22em;text-transform:uppercase;color:var(--gray);border:1px solid var(--light);padding:.18rem .6rem;}
+    h1.entry-title{font-size:clamp(2rem,5vw,4.5rem);font-weight:800;text-transform:uppercase;letter-spacing:-.01em;line-height:1;margin-bottom:.8rem;}
+    .entry-role{font-size:.75rem;letter-spacing:.2em;text-transform:uppercase;color:var(--gray);margin-bottom:2rem;}
+    .entry-body{font-size:1rem;line-height:2;color:#333;max-width:680px;white-space:pre-wrap;}
+    .entry-tags{display:flex;flex-wrap:wrap;gap:.5rem;margin-top:1.8rem;}
+    .tag{font-size:.58rem;letter-spacing:.16em;text-transform:uppercase;border:1px solid #ccc;padding:.22rem .7rem;color:#666;}
+
+    /* GALLERY SECTION */
+    .section-block{padding:3rem;}
+    .section-block + .section-block{border-top:1px solid var(--light);}
+    .section-label{font-size:.6rem;letter-spacing:.28em;text-transform:uppercase;color:var(--gray);margin-bottom:1.5rem;display:flex;align-items:center;gap:.8rem;}
+    .section-label::after{content:'';flex:1;height:1px;background:var(--light);}
+
+    .gallery{display:grid;grid-template-columns:repeat(auto-fill,minmax(260px,1fr));gap:12px;}
+    .gallery-item{position:relative;aspect-ratio:16/9;overflow:hidden;background:#ddd;cursor:pointer;}
+    .gallery-item img,.gallery-item video{width:100%;height:100%;object-fit:cover;display:block;transition:transform .35s ease;}
+    .gallery-item:hover img,.gallery-item:hover video{transform:scale(1.04);}
+    .gallery-item.video-item::after{content:'▶';position:absolute;inset:0;display:flex;align-items:center;justify-content:center;font-size:2rem;color:rgba(255,255,255,.9);pointer-events:none;text-shadow:0 2px 12px rgba(0,0,0,.6);}
+
+    /* LIGHTBOX */
+    .lightbox{display:none;position:fixed;inset:0;background:rgba(0,0,0,.95);z-index:500;align-items:center;justify-content:center;}
+    .lightbox.open{display:flex;}
+    .lightbox-inner{position:relative;max-width:90vw;max-height:90vh;}
+    .lightbox-inner img,.lightbox-inner video{max-width:90vw;max-height:86vh;object-fit:contain;display:block;}
+    .lightbox-close{position:absolute;top:-2.5rem;right:0;background:none;border:none;color:#fff;font-size:.75rem;cursor:pointer;letter-spacing:.18em;text-transform:uppercase;opacity:.7;transition:opacity .2s;}
+    .lightbox-close:hover{opacity:1;}
+    .lightbox-nav{position:absolute;top:50%;transform:translateY(-50%);background:rgba(255,255,255,.1);border:1px solid rgba(255,255,255,.15);color:#fff;width:44px;height:44px;cursor:pointer;font-size:1.4rem;display:flex;align-items:center;justify-content:center;transition:background .2s;}
+    .lightbox-nav:hover{background:rgba(255,255,255,.22);}
+    .lightbox-prev{left:-58px;} .lightbox-next{right:-58px;}
+    .lightbox-count{position:absolute;bottom:-2rem;left:50%;transform:translateX(-50%);color:rgba(255,255,255,.4);font-size:.6rem;letter-spacing:.2em;}
+
+    /* LINK CARDS */
+    .links-grid{display:flex;flex-direction:column;gap:.7rem;}
+    .link-card{display:flex;align-items:center;gap:1rem;padding:1rem 1.2rem;text-decoration:none;color:var(--black);border:1px solid var(--light);background:#fff;transition:border-color .2s,background .2s;cursor:pointer;}
+    .link-card:hover{border-color:var(--black);background:var(--white);}
+    .lc-icon{width:38px;height:38px;border-radius:8px;display:flex;align-items:center;justify-content:center;font-size:1.1rem;flex-shrink:0;color:#fff;font-weight:700;}
+    .lc-text{flex:1;min-width:0;}
+    .lc-platform{font-size:.55rem;letter-spacing:.18em;text-transform:uppercase;color:var(--gray);}
+    .lc-label{font-size:.82rem;margin-top:.1rem;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+    .lc-arrow{font-size:.85rem;opacity:.35;flex-shrink:0;transition:opacity .2s,transform .2s;}
+    .link-card:hover .lc-arrow{opacity:.8;transform:translateX(3px);}
+
+    /* FOOTER NAV */
+    .entry-footer{padding:3rem;border-top:1px solid var(--light);display:flex;justify-content:space-between;align-items:center;}
+    .entry-footer a{font-size:.68rem;letter-spacing:.18em;text-transform:uppercase;color:var(--black);text-decoration:none;opacity:.55;transition:opacity .2s;}
+    .entry-footer a:hover{opacity:1;}
+
+    /* SOCIAL */
+    .social-section{padding:3rem;border-top:1px solid var(--light);}
+    .social-section h3{font-size:.65rem;letter-spacing:.28em;text-transform:uppercase;color:var(--gray);margin-bottom:1.5rem;}
+    .social-links{display:flex;flex-wrap:wrap;gap:1rem;}
+    .social-link{display:inline-flex;align-items:center;gap:.5rem;font-size:.72rem;letter-spacing:.15em;text-transform:uppercase;color:var(--black);text-decoration:none;border:1.5px solid var(--black);padding:.55rem 1.2rem;transition:background .2s,color .2s;}
+    .social-link:hover{background:var(--black);color:var(--white);}
+
+    .not-found{padding:6rem 3rem;text-align:center;}
+    .not-found h2{font-size:1.5rem;font-weight:800;text-transform:uppercase;margin-bottom:1rem;}
+    .not-found p{color:var(--gray);font-size:.85rem;}
+
+    @media(max-width:768px){
+      nav{padding:1.2rem 1.5rem;} .nav-links{gap:1.2rem;}
+      .breadcrumb,.entry-detail,.section-block,.entry-footer,.social-section{padding-left:1.5rem;padding-right:1.5rem;}
+      .entry-detail{padding-top:2.5rem;}
+      .gallery{grid-template-columns:repeat(auto-fill,minmax(160px,1fr));}
+      .lightbox-prev{left:-36px;} .lightbox-next{right:-36px;}
+    }
+  </style>
+</head>
+<body>
+
+<nav>
+  <a class="nav-logo" href="index.html">Wanda Huang</a>
+  <ul class="nav-links">
+    <li><a href="about.html">About</a></li>
+    <li><a href="marketing.html">Marketing &amp; Projects</a></li>
+  </ul>
+</nav>
+
+<div class="breadcrumb">
+  <a class="back-link" id="back-link" href="marketing.html">← Back</a>
+  <span class="breadcrumb-sep">/</span>
+  <span class="breadcrumb-current" id="breadcrumb-title">Entry</span>
+</div>
+
+<div class="entry-hero" id="entry-hero">
+  <img id="hero-img" src="" alt=""/>
+</div>
+
+<div id="entry-content">
+  <!-- filled by JS -->
+</div>
+
+<div class="lightbox" id="lightbox" onclick="closeLightbox(event)">
+  <div class="lightbox-inner" id="lightbox-inner">
+    <button class="lightbox-close" onclick="closeLightbox()">✕ Close</button>
+    <button class="lightbox-nav lightbox-prev" onclick="lbNav(-1);event.stopPropagation()">‹</button>
+    <button class="lightbox-nav lightbox-next" onclick="lbNav(1);event.stopPropagation()">›</button>
+    <div class="lightbox-count" id="lb-count"></div>
+  </div>
+</div>
+
+<div class="social-section">
+  <h3>Connect with me</h3>
+  <div class="social-links" id="social-links"></div>
+</div>
+
+<script>
+function getData(){try{const ls=localStorage.getItem('wanda_portfolio');if(ls){try{sessionStorage.setItem('wanda_portfolio',ls);}catch(e){}return JSON.parse(ls);}const ss=sessionStorage.getItem('wanda_portfolio');if(ss){try{localStorage.setItem('wanda_portfolio',ss);}catch(e){}return JSON.parse(ss);}return{};}catch(e){return{};}}
+// IDB helpers
+function _openIDB(){return new Promise(function(res,rej){var r=indexedDB.open('wanda_imgs',1);r.onupgradeneeded=function(e){e.target.result.createObjectStore('imgs');};r.onsuccess=function(e){res(e.target.result);};r.onerror=function(){rej(r.error);};});}
+async function _imgGet(ref){if(!ref)return'';if(!ref.startsWith('idb:'))return ref;var db=await _openIDB();return new Promise(function(res,rej){var tx=db.transaction('imgs','readonly');var r=tx.objectStore('imgs').get(ref.slice(4));r.onsuccess=function(){res(r.result||'');};r.onerror=function(){rej(r.error);};});}
+// After page builds, resolve all data-idb attrs async
+function _fillImgs(){document.querySelectorAll('[data-idb]').forEach(async function(el){var src=await _imgGet(el.getAttribute('data-idb'));if(src)el.src=src;});}
+
+const DEFAULT_M=[
+  {num:'01',title:'Alumni Relations Office',role:'Marketing & Events Intern',body:'Led content creation for Instagram and Facebook, driving alumni engagement through compelling event recaps and storytelling. Conducted alumni outreach and interviews to highlight their journeys. Supported planning and execution of alumni events.',tags:['Instagram','Facebook','Content Creation','Event Planning'],coverImg:'',media:[],embeds:[]},
+  {num:'02',title:'Boys & Girls Club of Whittier',role:'Community Outreach Program Lead',body:'Spearheaded social media strategies that boosted volunteer engagement by 25% through targeted campaigns. Produced 10 dynamic posts and 3 videos, driving a 15% increase in Instagram followers. Elevated brand visibility across five partner organizations.',tags:['+25% Engagement','+15% Followers','Video Production','LinkedIn'],coverImg:'',media:[],embeds:[]},
+  {num:'03',title:'Community Outreach Program',role:'Social Media Manager',body:'Managed social platforms and created engaging content to promote volunteer initiatives. Organized over 10 events and campaigns. Designed quarterly newsletters using Canva.',tags:['Social Media','Canva','Newsletter Design','Event Campaigns'],coverImg:'',media:[],embeds:[]},
+  {num:'04',title:'Astray Company',role:'Marketing Intern',body:'Led development of a corporate video at this startup focused on UN Sustainable Development Goals. Managed from concept to execution, aligning messaging with sustainability mission.',tags:['Video Production','Brand Messaging','Sustainability','Startup'],coverImg:'',media:[],embeds:[]},
+];
+const DEFAULT_P=[
+  {num:'01',title:'AM Design',role:'Founder & Creative Director',body:'A lifestyle brand I founded to celebrate global creativity and support emerging artists. I oversee creative direction, artist partnerships, production, packaging, marketing, and donation coordination.',tags:[],coverImg:'',media:[],embeds:[]},
+  {num:'02',title:'A Saving Company',role:'Project Manager',body:'A Taipei-based brand creating handcrafted silver jewelry and lifestyle items with a touch of humor and elegance. Focused on sustainability and workshops. Managed full production and marketing pipeline.',tags:[],coverImg:'',media:[],embeds:[]},
+  {num:'03',title:'Whittier College — CEC',role:'Social Media & Outreach Coordinator',body:'Managed social media and organized campus-wide volunteerism initiatives. Led the annual Love Whittier campaign and collaborated with community partners.',tags:[],coverImg:'',media:[],embeds:[]},
+  {num:'04',title:'Meaning Taiwan',role:'Project Coordinator',body:'A Taiwanese brand offering customizable wedding and event gifts. Coordinated charitable donations for every order, integrating social impact into each celebration.',tags:[],coverImg:'',media:[],embeds:[]},
+  {num:'05',title:'Meaning Wedding',role:'Production & Vendor Manager',body:'Personalized wedding gift brand. Worked with brides on every detail — product selection, packaging, charitable donations. Led full production and vendor management.',tags:[],coverImg:'',media:[],embeds:[]},
+];
+
+// ── URL params ──
+const params=new URLSearchParams(window.location.search);
+const section=params.get('s')||'marketing';
+const idx=parseInt(params.get('i')||'0');
+
+const d=getData();
+const entries=section==='marketing'?(d.marketingEntries||DEFAULT_M):(d.projectEntries||DEFAULT_P);
+const entry=entries[idx];
+
+const sectionLabel=section==='marketing'?'Marketing':'Projects';
+const sectionHref=section==='marketing'?'marketing.html':'projects.html';
+
+// set back link
+document.getElementById('back-link').href=sectionHref;
+document.getElementById('back-link').textContent='← Back to '+sectionLabel;
+document.title=(entry?entry.title:'Entry')+' — Wanda Huang';
+
+// ── Platform helper ──
+function getPlatform(url){
+  if(/instagram/.test(url)) return{name:'Instagram',icon:'📷',bg:'#E1306C'};
+  if(/tiktok/.test(url))    return{name:'TikTok',icon:'♪',bg:'#000'};
+  if(/youtube|youtu\.be/.test(url)) return{name:'YouTube',icon:'▶',bg:'#FF0000'};
+  if(/facebook/.test(url))  return{name:'Facebook',icon:'f',bg:'#1877F2'};
+  if(/linkedin/.test(url))  return{name:'LinkedIn',icon:'in',bg:'#0A66C2'};
+  if(/twitter|x\.com/.test(url)) return{name:'X / Twitter',icon:'𝕏',bg:'#000'};
+  return{name:'Link',icon:'↗',bg:'#555'};
+}
+function makeLinkCard(embed){
+  const p=getPlatform(embed.url);
+  const label=embed.label||p.name;
+  return`<a href="${embed.url}" target="_blank" class="link-card">
+    <div class="lc-icon" style="background:${p.bg}">${p.icon}</div>
+    <div class="lc-text">
+      <div class="lc-platform">${p.name}</div>
+      <div class="lc-label">${label}</div>
+    </div>
+    <span class="lc-arrow">→</span>
+  </a>`;
+}
+
+// ── Render ──
+if(!entry){
+  document.getElementById('entry-hero').classList.add('no-cover');
+  document.getElementById('entry-content').innerHTML=`
+    <div class="not-found">
+      <h2>Entry not found</h2>
+      <p>This entry may have been removed or the link is incorrect.<br>
+      <a href="${sectionHref}" style="color:var(--black);">← Return to ${sectionLabel}</a></p>
+    </div>`;
+} else {
+  document.getElementById('breadcrumb-title').textContent=entry.title;
+  document.title=entry.title+' — Wanda Huang';
+
+  // Hero cover
+  if(entry.coverImg){
+    document.getElementById('hero-img').setAttribute('data-idb',entry.coverImg);
+  } else {
+    document.getElementById('entry-hero').classList.add('no-cover');
+  }
+
+  const container=document.getElementById('entry-content');
+
+  // ── TITLE / ROLE / BODY / TAGS ──
+  const detail=document.createElement('div');
+  detail.className='entry-detail';
+  detail.innerHTML=
+    '<div class="entry-meta">'+
+      '<span class="entry-num">'+entry.num+'</span>'+
+      '<span class="entry-section-tag">'+sectionLabel+'</span>'+
+    '</div>'+
+    '<h1 class="entry-title">'+entry.title+'</h1>'+
+    '<div class="entry-role">'+entry.role+'</div>'+
+    '<p class="entry-body">'+entry.body+'</p>';
+  if(entry.tags&&entry.tags.length){
+    const tagWrap=document.createElement('div');
+    tagWrap.className='entry-tags';
+    entry.tags.forEach(function(t){
+      const s=document.createElement('span');
+      s.className='tag';s.textContent=t;
+      tagWrap.appendChild(s);
+    });
+    detail.appendChild(tagWrap);
+  }
+  container.appendChild(detail);
+
+  // ── GALLERY ──
+  const media=entry.media||[];
+  if(media.length){
+    const sec=document.createElement('div');
+    sec.className='section-block';
+    sec.innerHTML='<div class="section-label">Photos &amp; Videos</div>';
+    const grid=document.createElement('div');
+    grid.className='gallery';
+    media.forEach(function(m,j){
+      const item=document.createElement('div');
+      item.className='gallery-item'+(m.type==='video'?' video-item':'');
+      item.setAttribute('onclick','openLightbox('+j+')');
+      if(m.type==='video'){
+        const v=document.createElement('video');
+        v.setAttribute('data-idb',m.src);v.muted=true;v.preload='metadata';
+        item.appendChild(v);
+      } else {
+        const img=document.createElement('img');
+        img.setAttribute('data-idb',m.src);img.alt='';img.loading='lazy';
+        item.appendChild(img);
+      }
+      grid.appendChild(item);
+    });
+    sec.appendChild(grid);
+    container.appendChild(sec);
+  }
+
+  // ── SOCIAL / EMBED LINKS ──
+  const embeds=(entry.embeds||[]).filter(function(em){return em&&em.url;});
+  if(embeds.length){
+    const sec=document.createElement('div');
+    sec.className='section-block';
+    sec.innerHTML='<div class="section-label">Social Posts &amp; Links</div>';
+    const linksGrid=document.createElement('div');
+    linksGrid.className='links-grid';
+    embeds.forEach(function(em){
+      linksGrid.innerHTML+=makeLinkCard(em);
+    });
+    sec.appendChild(linksGrid);
+    container.appendChild(sec);
+  }
+
+  // ── PREV / NEXT ──
+  const footer=document.createElement('div');
+  footer.className='entry-footer';
+  const prevHTML=idx>0
+    ? '<a href="entry.html?s='+section+'&i='+(idx-1)+'">← '+entries[idx-1].title+'</a>'
+    : '<a href="'+sectionHref+'">← Back to '+sectionLabel+'</a>';
+  const nextHTML=idx<entries.length-1
+    ? '<a href="entry.html?s='+section+'&i='+(idx+1)+'">'+entries[idx+1].title+' →</a>'
+    : '<span style="opacity:.2">Last entry</span>';
+  footer.innerHTML=prevHTML+nextHTML;
+  container.appendChild(footer);
+  _fillImgs(); // async-fill all images from IDB
+}
+
+// ── Lightbox ──
+const _lb={idx:-1};
+function openLightbox(j){
+  _lb.idx=j;showLBItem();
+  document.getElementById('lightbox').classList.add('open');
+}
+async function showLBItem(){
+  const media=entry.media;
+  const item=media[_lb.idx];
+  const inner=document.getElementById('lightbox-inner');
+  inner.querySelectorAll('img,video').forEach(el=>el.remove());
+  const el=item.type==='video'?document.createElement('video'):document.createElement('img');
+  el.src=await _imgGet(item.src); // resolve IDB ref
+  if(item.type==='video'){el.controls=true;el.autoplay=true;}
+  inner.insertBefore(el,inner.firstChild.nextSibling);
+  document.getElementById('lb-count').textContent=(_lb.idx+1)+' / '+media.length;
+}
+function lbNav(dir){
+  const len=entry.media.length;
+  _lb.idx=(_lb.idx+dir+len)%len;showLBItem();
+}
+function closeLightbox(e){
+  if(e&&e.target!==document.getElementById('lightbox')) return;
+  document.getElementById('lightbox').classList.remove('open');
+  document.getElementById('lightbox-inner').querySelectorAll('video').forEach(v=>v.pause());
+}
+document.addEventListener('keydown',e=>{
+  const lb=document.getElementById('lightbox');
+  if(!lb.classList.contains('open')) return;
+  if(e.key==='Escape') closeLightbox({target:lb});
+  if(e.key==='ArrowLeft') lbNav(-1);
+  if(e.key==='ArrowRight') lbNav(1);
+});
+
+// ── Socials ──
+const DEFAULT_SOCIALS=[{label:'Email',url:'mailto:wandahuang87@gmail.com',icon:'✉'},{label:'LinkedIn',url:'http://www.linkedin.com/in/wandah87',icon:'in'}];
+(getData().socials||DEFAULT_SOCIALS).forEach(s=>{
+  const a=document.createElement('a');a.className='social-link';a.href=s.url;a.target='_blank';
+  a.innerHTML=`<span>${s.icon||'↗'}</span> ${s.label}`;
+  document.getElementById('social-links').appendChild(a);
+});
+</script>
+</body>
+</html>

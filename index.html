@@ -1,0 +1,341 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Wanda Huang — Portfolio</title>
+  <style>
+    *,*::before,*::after{box-sizing:border-box;margin:0;padding:0;}
+    :root{--black:#0a0a0a;--white:#f5f4f0;--gray:#888;}
+    html,body{width:100%;height:100%;overflow:hidden;font-family:'Helvetica Neue',Helvetica,Arial,sans-serif;}
+
+    /* Canvas bg */
+    #water-canvas{position:fixed;inset:0;width:100%;height:100%;z-index:0;}
+
+    /* Overlay to darken canvas slightly */
+    .overlay{position:fixed;inset:0;background:rgba(245,244,240,0.18);z-index:1;pointer-events:none;}
+
+    /* NAV */
+    nav{
+      position:fixed;top:0;left:0;right:0;z-index:10;
+      display:flex;justify-content:space-between;align-items:center;
+      padding:1.8rem 3rem;
+    }
+    .nav-logo{
+      font-size:.72rem;font-weight:700;letter-spacing:.22em;
+      text-transform:uppercase;color:var(--black);text-decoration:none;
+    }
+    .nav-links{display:flex;gap:2.5rem;list-style:none;}
+    .nav-links a{
+      font-size:.68rem;font-weight:500;letter-spacing:.18em;
+      text-transform:uppercase;color:var(--black);text-decoration:none;
+      opacity:.55;transition:opacity .2s;
+    }
+    .nav-links a:hover{opacity:1;}
+
+    /* HERO CONTENT */
+    .hero{
+      position:fixed;inset:0;z-index:5;
+      display:flex;flex-direction:column;
+      justify-content:center;align-items:flex-start;
+      padding:0 3rem;
+      pointer-events:none;
+    }
+    .hero-label{
+      font-size:.65rem;letter-spacing:.28em;text-transform:uppercase;
+      color:var(--gray);margin-bottom:1.2rem;opacity:.8;
+    }
+    .hero-name{
+      font-size:clamp(5rem,13vw,12rem);
+      font-weight:800;line-height:.88;letter-spacing:-.03em;
+      text-transform:uppercase;color:var(--black);
+      mix-blend-mode:multiply;
+    }
+    .hero-sub{
+      font-size:clamp(.9rem,2vw,1.4rem);
+      font-weight:300;letter-spacing:.1em;text-transform:uppercase;
+      color:var(--gray);margin-top:1.2rem;
+    }
+
+    /* CTA BUTTONS */
+    .hero-cta{
+      position:fixed;bottom:3.5rem;left:3rem;right:3rem;z-index:6;
+      display:flex;gap:1.2rem;flex-wrap:wrap;
+    }
+    .cta-btn{
+      font-size:.65rem;font-weight:600;letter-spacing:.22em;text-transform:uppercase;
+      padding:.75rem 2rem;border:1.5px solid var(--black);
+      background:rgba(245,244,240,.55);color:var(--black);
+      text-decoration:none;cursor:pointer;
+      backdrop-filter:blur(6px);-webkit-backdrop-filter:blur(6px);
+      transition:background .25s,color .25s,transform .2s;
+    }
+    .cta-btn:hover{background:var(--black);color:var(--white);transform:translateY(-2px);}
+    .cta-btn.primary{background:var(--black);color:var(--white);}
+    .cta-btn.primary:hover{background:#333;}
+
+    /* SCROLL HINT */
+    .scroll-hint{
+      position:fixed;right:2.5rem;top:50%;transform:translateY(-50%);
+      z-index:6;display:flex;flex-direction:column;align-items:center;gap:.5rem;
+      writing-mode:vertical-rl;
+    }
+    .scroll-hint span{font-size:.58rem;letter-spacing:.25em;text-transform:uppercase;color:var(--gray);}
+    .scroll-line{width:1px;height:48px;background:var(--gray);animation:sl 2s ease-in-out infinite;}
+    @keyframes sl{
+      0%{transform:scaleY(0);transform-origin:top;}
+      49%{transform:scaleY(1);transform-origin:top;}
+      50%{transform:scaleY(1);transform-origin:bottom;}
+      100%{transform:scaleY(0);transform-origin:bottom;}
+    }
+
+    @media(max-width:640px){
+      nav{padding:1.2rem 1.5rem;}
+      .hero{padding:0 1.5rem;}
+      .hero-cta{left:1.5rem;right:1.5rem;bottom:2rem;}
+      .scroll-hint{display:none;}
+    }
+  </style>
+</head>
+<body>
+
+<canvas id="water-canvas"></canvas>
+<div class="overlay"></div>
+
+<nav>
+  <a class="nav-logo" href="index.html">Wanda Huang</a>
+  <ul class="nav-links">
+    <li><a href="about.html">About</a></li>
+    <li><a href="marketing.html">Marketing &amp; Projects</a></li>
+  </ul>
+</nav>
+
+<div class="hero">
+  <p class="hero-label">[ Portfolio · 2025 ]</p>
+  <h1 class="hero-name" id="hero-name">Wanda<br>Huang</h1>
+  <p class="hero-sub" id="hero-sub">Marketing · Project Management · Brand Strategy</p>
+</div>
+
+<div class="hero-cta">
+  <a class="cta-btn primary" href="about.html">About Me</a>
+  <a class="cta-btn" href="marketing.html">Marketing Experience</a>
+  <a class="cta-btn" href="projects.html">Project Management</a>
+</div>
+
+<div class="scroll-hint">
+  <div class="scroll-line"></div>
+  <span>Explore</span>
+</div>
+
+<script>
+// ── WATERY CANVAS — multi-ripple trail ──
+const canvas = document.getElementById('water-canvas');
+const gl = canvas.getContext('webgl') || canvas.getContext('experimental-webgl');
+
+if (!gl) {
+  document.body.style.background = 'linear-gradient(135deg,#e8f4f8,#d0e8f0,#f5f4f0)';
+} else {
+
+  // ── SHADERS ──
+  const VS = `
+    attribute vec2 a_pos;
+    void main(){ gl_Position = vec4(a_pos, 0.0, 1.0); }
+  `;
+
+  // We pass up to 24 ripple drops: position (vec2) + birth time (float) = 3 floats each
+  const MAX_DROPS = 24;
+  const FS = `
+    precision highp float;
+    uniform vec2  u_res;
+    uniform float u_time;
+    uniform vec2  u_mouse;       // live cursor (normalised canvas px)
+    uniform vec3  u_drops[${MAX_DROPS}]; // xy=pos(px), z=birthTime
+    uniform int   u_dropCount;
+
+    // Background ocean wave
+    float wave(vec2 p, float freq, float speed, float amp){
+      return sin(p.x*freq + u_time*speed) * cos(p.y*freq*0.7 + u_time*speed*0.85) * amp;
+    }
+
+    void main(){
+      vec2 uv  = gl_FragCoord.xy / u_res;
+      vec2 p   = uv * 2.0 - 1.0;
+      p.x     *= u_res.x / u_res.y;
+
+      // ── ambient ocean layers ──
+      float bg =
+        wave(p, 2.4,  0.55, 0.055) +
+        wave(p, 4.8,  0.85, 0.038) +
+        wave(p, 8.0,  1.20, 0.022) +
+        wave(p, 13.0, 2.00, 0.012);
+
+      // ── live cursor disturbance ──
+      vec2  mp  = u_mouse / u_res * 2.0 - 1.0;
+      mp.x     *= u_res.x / u_res.y;
+      float md  = length(p - mp);
+      float cursor = sin(md * 22.0 - u_time * 6.0) * exp(-md * 4.5) * 0.09;
+
+      // ── expanding ripple rings from trail drops ──
+      float rings = 0.0;
+      for(int i = 0; i < ${MAX_DROPS}; i++){
+        if(i >= u_dropCount) break;
+        float age    = u_time - u_drops[i].z;
+        if(age < 0.0 || age > 3.2) continue;
+
+        vec2  dpos   = u_drops[i].xy / u_res * 2.0 - 1.0;
+        dpos.x      *= u_res.x / u_res.y;
+        float dd     = length(p - dpos);
+
+        // ring radius grows outward, fades with age and distance
+        float radius = age * 0.55;          // expand speed
+        float fade   = exp(-age * 1.4);     // fade with time
+        float ring   = sin((dd - radius) * 28.0) * exp(-abs(dd - radius) * 18.0) * fade * 0.13;
+        rings       += ring;
+
+        // secondary inner ring (smaller, faster fade)
+        float r2 = age * 0.28;
+        float ring2 = sin((dd - r2) * 36.0) * exp(-abs(dd - r2) * 26.0) * fade * 0.07;
+        rings += ring2;
+      }
+
+      float total = bg + cursor + rings;
+
+      // ── colour palette: pearlescent water ──
+      vec3 deep    = vec3(0.78, 0.86, 0.94);  // cool blue-grey
+      vec3 shallow = vec3(0.95, 0.96, 0.98);  // near white
+      vec3 col     = mix(deep, shallow, clamp(total * 3.5 + 0.5, 0.0, 1.0));
+
+      // subtle iridescent tint near cursor
+      col += vec3(0.0, 0.04, 0.08) * exp(-md * 3.5);
+
+      // highlight crests
+      col += vec3(1.0) * clamp(total * 1.2, 0.0, 0.12);
+
+      gl_FragColor = vec4(col, 1.0);
+    }
+  `;
+
+  function compile(type, src){
+    const s = gl.createShader(type);
+    gl.shaderSource(s, src);
+    gl.compileShader(s);
+    if(!gl.getShaderParameter(s, gl.COMPILE_STATUS)) console.warn(gl.getShaderInfoLog(s));
+    return s;
+  }
+
+  const prog = gl.createProgram();
+  gl.attachShader(prog, compile(gl.VERTEX_SHADER, VS));
+  gl.attachShader(prog, compile(gl.FRAGMENT_SHADER, FS));
+  gl.linkProgram(prog);
+  gl.useProgram(prog);
+
+  const buf = gl.createBuffer();
+  gl.bindBuffer(gl.ARRAY_BUFFER, buf);
+  gl.bufferData(gl.ARRAY_BUFFER, new Float32Array([-1,-1,1,-1,-1,1,1,1]), gl.STATIC_DRAW);
+  const aPos = gl.getAttribLocation(prog, 'a_pos');
+  gl.enableVertexAttribArray(aPos);
+  gl.vertexAttribPointer(aPos, 2, gl.FLOAT, false, 0, 0);
+
+  const uRes      = gl.getUniformLocation(prog, 'u_res');
+  const uTime     = gl.getUniformLocation(prog, 'u_time');
+  const uMouse    = gl.getUniformLocation(prog, 'u_mouse');
+  const uDrops    = gl.getUniformLocation(prog, 'u_drops[0]');
+  const uDropCount= gl.getUniformLocation(prog, 'u_dropCount');
+
+  // ── Drop (ripple) ring pool ──
+  const drops = [];          // {x, y, t}
+  let lastDropTime = 0;
+  const DROP_INTERVAL = 55; // ms between drops — lower = denser trail
+
+  let mouse = { x: window.innerWidth/2, y: window.innerHeight/2 };
+  let prevMouse = { ...mouse };
+
+  function spawnDrop(x, y, t){
+    drops.push({ x: x * devicePixelRatio, y: (canvas.height / devicePixelRatio - y) * devicePixelRatio, t });
+    if(drops.length > MAX_DROPS) drops.shift();
+  }
+
+  window.addEventListener('mousemove', e => {
+    mouse.x = e.clientX;
+    mouse.y = e.clientY;
+    const now = performance.now();
+    const dx = mouse.x - prevMouse.x, dy = mouse.y - prevMouse.y;
+    const speed = Math.sqrt(dx*dx + dy*dy);
+    // spawn more drops when moving fast, fewer when slow
+    const interval = Math.max(30, DROP_INTERVAL - speed * 0.5);
+    if(now - lastDropTime > interval){
+      spawnDrop(mouse.x, mouse.y, (now - start) / 1000);
+      lastDropTime = now;
+      prevMouse = { ...mouse };
+    }
+  });
+
+  // click = big splash
+  window.addEventListener('click', e => {
+    const t = (performance.now() - start) / 1000;
+    for(let i = 0; i < 5; i++){
+      drops.push({
+        x: (e.clientX + (Math.random()-0.5)*30) * devicePixelRatio,
+        y: (canvas.height/devicePixelRatio - e.clientY + (Math.random()-0.5)*30) * devicePixelRatio,
+        t: t + i * 0.04
+      });
+    }
+    if(drops.length > MAX_DROPS) drops.splice(0, drops.length - MAX_DROPS);
+  });
+
+  // touch support
+  window.addEventListener('touchmove', e => {
+    const t = e.touches[0];
+    mouse.x = t.clientX; mouse.y = t.clientY;
+    spawnDrop(t.clientX, t.clientY, (performance.now()-start)/1000);
+  }, {passive:true});
+
+  function resize(){
+    canvas.width  = window.innerWidth  * devicePixelRatio;
+    canvas.height = window.innerHeight * devicePixelRatio;
+    canvas.style.width  = window.innerWidth  + 'px';
+    canvas.style.height = window.innerHeight + 'px';
+    gl.viewport(0, 0, canvas.width, canvas.height);
+  }
+  window.addEventListener('resize', resize);
+  resize();
+
+  const start = performance.now();
+
+  function frame(){
+    const t = (performance.now() - start) / 1000;
+
+    // build flat array for drops uniform [x,y,birthT, x,y,birthT, ...]
+    const dropData = new Float32Array(MAX_DROPS * 3);
+    const active = drops.filter(d => (t - d.t) < 3.2);
+    const count  = Math.min(active.length, MAX_DROPS);
+    for(let i = 0; i < count; i++){
+      dropData[i*3]   = active[i].x;
+      dropData[i*3+1] = active[i].y;
+      dropData[i*3+2] = active[i].t;
+    }
+
+    gl.uniform2f(uRes,   canvas.width, canvas.height);
+    gl.uniform1f(uTime,  t);
+    gl.uniform2f(uMouse, mouse.x * devicePixelRatio, (window.innerHeight - mouse.y) * devicePixelRatio);
+    gl.uniform3fv(uDrops, dropData);
+    gl.uniform1i(uDropCount, count);
+
+    gl.drawArrays(gl.TRIANGLE_STRIP, 0, 4);
+    requestAnimationFrame(frame);
+  }
+  frame();
+}
+
+// Load custom content from admin
+function applyData(){
+  try {
+    const d = JSON.parse(localStorage.getItem('wanda_portfolio') || '{}');
+    if(d.heroName) document.getElementById('hero-name').innerHTML = d.heroName.replace('\n','<br>');
+    if(d.heroSub)  document.getElementById('hero-sub').textContent = d.heroSub;
+  } catch(e){}
+}
+applyData();
+</script>
+</body>
+</html>
